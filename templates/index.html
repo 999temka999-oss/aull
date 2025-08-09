@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <title>Mini Farm</title>
+
+  <!-- Без зума/скролла, с safe-area -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="format-detection" content="telephone=no" />
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <meta id="app-config" data-bg="{{ url_for('static', filename='img/bg.jpg') }}">
+</head>
+<body class="no-scroll no-select">
+  <div id="app" class="app">
+
+    <!-- GATE -->
+    <section id="gate" class="gate card">
+      <div id="gate-text" class="muted">Проверка окружения…</div>
+      <button id="retryBtn" class="btn hidden" style="margin-top:12px">Повторить попытку</button>
+    </section>
+
+    <!-- Сцена (канвас) между панелями -->
+    <section id="scene" class="scene">
+      <canvas id="field"></canvas>
+    </section>
+
+    <!-- HUD сверху -->
+    <header id="hud" class="hud card">
+      <div class="row gap">
+        <div class="avatar"></div>
+        <div>
+          <div id="playerName" class="title">Игрок</div>
+          <div id="playerSub" class="muted small">Хорошего урожая!</div>
+        </div>
+      </div>
+      <div class="muted">Монеты: <span id="balance">0</span></div>
+    </header>
+
+    <!-- Нижняя панель -->
+    <nav id="bottom" class="bottom card">
+      <button id="btnPlant" class="btn" disabled>Посадить</button>
+      <button class="btn" disabled>Инвентарь</button>
+      <button class="btn" disabled>Магазин</button>
+      <button class="btn" disabled>Настройки</button>
+    </nav>
+
+  </div>
+
+  <script src="{{ url_for('static', filename='js/game.js') }}"></script>
+</body>
+</html>

@@ -5,12 +5,15 @@ from dotenv import load_dotenv
 load_dotenv()
 
 def _normalize_db_url(url: str) -> str:
-    # Render часто даёт postgres://, SQLAlchemy любит postgresql+psycopg2://
-    if not url: 
+    if not url:
         return ""
     url = url.strip()
+    # Render/многие сервисы выдают postgres://... — приводим
     if url.startswith("postgres://"):
-        url = "postgresql+psycopg2://" + url[len("postgres://"):]
+        url = "postgresql+psycopg://" + url[len("postgres://"):]
+    # если вдруг postgresql:// без +psycopg
+    elif url.startswith("postgresql://") and "+psycopg" not in url:
+        url = "postgresql+psycopg://" + url[len("postgresql://"):]
     return url
 
 class Config:
@@ -39,3 +42,4 @@ class Config:
         key = key[2:] if key.lower().startswith("0x") else key
         if not re.fullmatch(r"[0-9a-fA-F]{64}", key or ""):
             raise RuntimeError("TG_PUBLIC_KEY_HEX: нужен ровно 64-символьный hex без пробелов.")
+

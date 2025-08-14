@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+  />
+  <title>Farm</title>
+  <link rel="stylesheet" href="/static/css/style.css?v={{ v }}">
+  <script defer src="/static/js/telegram_auth.js?v={{ v }}"></script>
+  <script defer src="/static/js/main.js?v={{ v }}"></script>
+  <script defer src="/static/js/farm.js?v={{ v }}"></script>
+</head>
+<body>
+  <div class="game-root">
+    <!-- Шапка -->
+    <div class="topbar">
+      <div class="player-name">
+        <span id="playerName">Игрок</span>
+        <span class="badge"><span id="playerBalance">0</span> 💰</span>
+      </div>
+    </div>
+
+    <!-- Сцена/поле -->
+    <div class="scene">
+      <div class="field-area">
+        <div class="grid" id="fieldGrid"></div>
+      </div>
+    </div>
+
+    <!-- Нижняя панель -->
+    <div class="bottom-bar">
+      <button class="ui-btn ghost" id="btnInventory">Инвентарь</button>
+      <button class="ui-btn" id="btnShop">Магазин</button>
+    </div>
+  </div>
+
+  <!-- Тосты -->
+  <div id="toastHost" class="toast-host"></div>
+
+  <!-- Модалка (контент рендерится JS) -->
+  <div id="modal" class="modal">
+    <div id="modalBody"></div>
+    <button id="modalClose" class="sr-only" aria-label="Закрыть"></button>
+  </div>
+</body>
+</html>

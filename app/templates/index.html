@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Ферма — Авторизация{% endblock %}
+{% block content %}
+  <main class="container">
+    <h1>Онлайн‑ферма</h1>
+    <p id="auth-status">Проверка доступа…</p>
+  </main>
+{% endblock %}
+{% block scripts %}
+  <script src="{{ url_for('static', filename='js/telegram_auth.js', v=v) }}"></script>
+{% endblock %}

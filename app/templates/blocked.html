@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Аккаунт заблокирован{% endblock %}
+{% block content %}
+<main class="container" style="padding: 20px; text-align: center; background: #ffebee; min-height: 100vh;">
+    <div style="max-width: 500px; margin: 50px auto; padding: 30px; background: #f44336; color: white; border-radius: 10px; box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);">
+        <h1 style="font-size: 2em; margin-bottom: 20px;">🚫 Аккаунт заблокирован</h1>
+        
+        <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h2 style="font-size: 1.2em; margin-bottom: 10px;">Причина блокировки:</h2>
+            <p id="blockReason" style="font-size: 1.1em; font-weight: bold;">Загрузка...</p>
+        </div>
+        
+        <div style="margin-top: 30px; font-size: 0.9em; opacity: 0.9;">
+            <p>Если считаете, что блокировка произошла по ошибке,<br>обратитесь к администратору.</p>
+        </div>
+        
+        <div style="margin-top: 30px;">
+            <button onclick="checkStatus()" style="padding: 12px 24px; background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; cursor: pointer; font-size: 1em;">
+                🔄 Проверить статус
+            </button>
+        </div>
+    </div>
+</main>
+
+<script>
+let blockReason = "Аккаунт заблокирован администратором";
+
+// Получаем причину блокировки из sessionStorage
+const playerData = sessionStorage.getItem("blocked_reason");
+if (playerData) {
+    blockReason = playerData;
+}
+
+document.getElementById("blockReason").textContent = blockReason;
+
+async function checkStatus() {
+    const btn = document.querySelector("button");
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "🔄 Проверяем...";
+    
+    try {
+        // Проверяем статус через API состояния
+        const response = await fetch('/api/state', {
+            credentials: 'same-origin'
+        });
+        
+        const data = await response.json();
+        
+        if (data.ok) {
+            // Если успешно - значит разблокировали
+            sessionStorage.removeItem("blocked_reason");
+            window.location.href = "/farm";
+        } else if (data.error === "user_blocked") {
+            // Все еще заблокирован
+            document.getElementById("blockReason").textContent = data.blocked_reason || blockReason;
+            
+            // Показываем уведомление
+            const notification = document.createElement("div");
+            notification.style.cssText = "position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); color: white; padding: 15px 25px; border-radius: 5px; z-index: 9999;";
+            notification.textContent = "❌ Аккаунт все еще заблокирован";
+            document.body.appendChild(notification);
+            
+            setTimeout(() => notification.remove(), 3000);
+        } else {
+            // Другая ошибка
+            window.location.href = "/";
+        }
+    } catch (error) {
+        console.error("Ошибка проверки статуса:", error);
+    }
+    
+    btn.disabled = false;
+    btn.textContent = originalText;
+}
+</script>
+{% endblock %}

@@ -1,0 +1,299 @@
+/* ===== Блокировка скролла/зума ===== */
+html, body {
+  margin: 0; padding: 0; height: 100%; width: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: manipulation;
+  -ms-touch-action: manipulation;
+  -webkit-user-select: none; user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-text-size-adjust: 100%;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+* { -webkit-tap-highlight-color: transparent; }
+
+/* ===== Тема/переменные ===== */
+:root {
+  /* поле */
+  --tile-size: 90px;
+  --tile-gap: 10px;
+  --grid-cols: 4;
+  --grid-rows: 4;
+
+  /* панель имени */
+  --panel-top: 100px;
+  --panel-x: 50%;
+  --panel-align: -50%;
+  --panel-width: 90%;
+  --panel-height: auto;
+  --panel-maxw: 82vw;
+
+  /* цвета */
+  --c-white: #fff;
+  --c-text-dim: rgba(255,255,255,0.85);
+  --c-border: rgba(255,255,255,0.12);
+  --c-glass: rgba(255,255,255,0.08);
+  --c-bg: rgba(20,24,20,0.92);
+  --c-primary: #1cd35f;
+  --c-primary-dark: #0a8e3a;
+
+  /* капсульное меню */
+  --accent: #25d662;
+  --accent-dark: #0d9a40;
+  --panel-bg: rgba(30,32,30,0.92);
+  --panel-row: rgba(255,255,255,0.06);
+  --panel-border-strong: rgba(255,255,255,0.12);
+  --panel-shadow: 0 12px 32px rgba(0,0,0,.38), 0 0 0 2px #1da44a inset;
+
+  /* скругления/тени/z */
+  --r-lg: 16px;
+  --r-md: 12px;
+  --r-sm: 10px;
+  --shadow-1: 0 12px 32px rgba(0,0,0,.35);
+  --blur: 6px;
+
+  --z-topbar: 10;
+  --z-bottom: 12;
+  --z-modal: 20;
+  --z-toast: 30;
+}
+
+/* ===== Бэкграунд ===== */
+.game-root {
+  position: fixed; inset: 0; overflow: hidden;
+  background: #1e7a00 url("/static/images/bg.jpg") center/cover no-repeat;
+}
+
+/* ===== Шапка ===== */
+.topbar { position: absolute; inset: 0; pointer-events: none; z-index: var(--z-topbar); }
+.player-name {
+  position: absolute;
+  top: var(--panel-top); left: var(--panel-x); transform: translate(var(--panel-align),0);
+  width: var(--panel-width); max-width: var(--panel-maxw); height: var(--panel-height);
+  pointer-events: auto;
+  display: grid; grid-auto-flow: column; gap: 10px; align-items: center; justify-content: space-between;
+  padding: 10px 14px;
+  color: var(--c-white); font-weight: 800;
+  background: linear-gradient(180deg, rgba(0,0,0,0.28), rgba(0,0,0,0.08));
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg); backdrop-filter: blur(var(--blur));
+  box-shadow: var(--shadow-1);
+}
+.badge {
+  display: inline-grid; grid-auto-flow: column; gap: 8px; align-items: center;
+  padding: 6px 10px; border-radius: 999px; font-weight: 800;
+  background: var(--c-glass); border: 1px solid var(--c-border); color: var(--c-white);
+}
+
+/* ===== Сцена/поле ===== */
+.scene { position: absolute; inset: 0; }
+.field-area {
+  position: absolute; left: 50%; top: 50%;
+  transform: translate(-50%, calc(-50% + 150px)) scale(1);
+  transform-origin: top center;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(var(--grid-cols), var(--tile-size));
+  grid-template-rows: repeat(var(--grid-rows), var(--tile-size));
+  gap: var(--tile-gap);
+}
+.tile {
+  width: var(--tile-size); height: var(--tile-size); position: relative;
+  border-radius: var(--r-sm);
+  background: url("/static/images/soil.png") center/contain no-repeat;
+  image-rendering: crisp-edges;
+  box-shadow: 0 2px 0 rgba(0,0,0,0.2);
+}
+.tile.plus { background-image: url("/static/images/plus.png"); cursor: pointer; transition: transform .1s ease; }
+.tile.plus:active { transform: scale(0.96); }
+
+/* Анимации */
+@keyframes field-appear { 0%{transform:scale(0.25);opacity:0;} 70%{transform:scale(1.06);opacity:1;} 100%{transform:scale(1);} }
+.tile.new-field { animation: field-appear 230ms ease-out; }
+
+@keyframes tile-bump { 0%{transform:scale(1);} 40%{transform:scale(1.08);} 100%{transform:scale(1);} }
+.tile.bump { animation: tile-bump 160ms ease-out; }
+
+/* Культуры */
+@keyframes crop-sway { 0%{transform:translateY(0) scale(1);} 50%{transform:translateY(-2px) scale(1.01);} 100%{transform:translateY(0) scale(1);} }
+
+/* Пшеница */
+.tile.planted-wheat {
+  background-image: url("/static/images/wheat.png");
+  background-size: contain; background-position: center; background-repeat: no-repeat;
+  animation: crop-sway 2.2s ease-in-out infinite;
+}
+.tile.planted-wheat.stage-sprout { animation-duration: 1.6s; }
+.tile.planted-wheat.stage-young  { animation-duration: 2.0s; }
+.tile.planted-wheat.stage-mature { animation-duration: 2.6s; }
+.tile.planted-wheat.stage-ready  { animation-duration: 3.0s; }
+
+/* Морковь */
+.tile.planted-carrot {
+  background-image: url("/static/images/carrot.png");
+  background-size: contain; background-position: center; background-repeat: no-repeat;
+  animation: crop-sway 2.4s ease-in-out infinite;
+}
+.tile.planted-carrot.stage-sprout { animation-duration: 1.8s; }
+.tile.planted-carrot.stage-young  { animation-duration: 2.2s; }
+.tile.planted-carrot.stage-mature { animation-duration: 2.8s; }
+.tile.planted-carrot.stage-ready  { animation-duration: 3.2s; }
+
+/* Арбуз */
+.tile.planted-watermelon {
+  background-image: url("/static/images/watermelon.png");
+  background-size: contain; background-position: center; background-repeat: no-repeat;
+  animation: crop-sway 2.6s ease-in-out infinite;
+}
+.tile.planted-watermelon.stage-sprout { animation-duration: 2.0s; }
+.tile.planted-watermelon.stage-young  { animation-duration: 2.4s; }
+.tile.planted-watermelon.stage-mature { animation-duration: 3.0s; }
+.tile.planted-watermelon.stage-ready  { animation-duration: 3.4s; }
+
+/* Тыква */
+.tile.planted-pumpkin {
+  background-image: url("/static/images/pumpkin.png");
+  background-size: contain; background-position: center; background-repeat: no-repeat;
+  animation: crop-sway 2.8s ease-in-out infinite;
+}
+.tile.planted-pumpkin.stage-sprout { animation-duration: 2.2s; }
+.tile.planted-pumpkin.stage-young  { animation-duration: 2.6s; }
+.tile.planted-pumpkin.stage-mature { animation-duration: 3.2s; }
+.tile.planted-pumpkin.stage-ready  { animation-duration: 3.6s; }
+
+/* Лук */
+.tile.planted-onion {
+  background-image: url("/static/images/onion.png");
+  background-size: contain; background-position: center; background-repeat: no-repeat;
+  animation: crop-sway 3.0s ease-in-out infinite;
+}
+.tile.planted-onion.stage-sprout { animation-duration: 2.4s; }
+.tile.planted-onion.stage-young  { animation-duration: 2.8s; }
+.tile.planted-onion.stage-mature { animation-duration: 3.4s; }
+.tile.planted-onion.stage-ready  { animation-duration: 3.8s; }
+
+/* Таймер/сбор */
+.timer-badge {
+  position: absolute; right: 4px; bottom: 4px;
+  padding: 3px 7px; border-radius: 999px; font-size: 11px; line-height: 1;
+  color: var(--c-white); background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,0.15);
+  pointer-events: none;
+}
+.harvest-btn {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
+  padding: 8px 12px; font-weight: 900; font-size: 12px; line-height: 1;
+  color: #0b2a10; background: var(--c-primary);
+  border: 0; border-radius: 12px; box-shadow: 0 2px 0 var(--c-primary-dark);
+  cursor: pointer;
+}
+
+/* ===== Нижняя панель ===== */
+.bottom-bar {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  padding: 12px 12px calc(12px + env(safe-area-inset-bottom,0));
+  display: grid; grid-auto-flow: column; gap: 10px; justify-content: center;
+  pointer-events: auto; z-index: var(--z-bottom);
+  background: linear-gradient(to top, rgba(0,0,0,0.28), rgba(0,0,0,0));
+  backdrop-filter: blur(2px);
+}
+.ui-btn {
+  appearance: none; border: 0; border-radius: 14px;
+  padding: 12px 16px; font-weight: 800; font-size: 16px; line-height: 1;
+  cursor: pointer; color: #0b2a10; background: var(--c-primary);
+  box-shadow: 0 2px 0 var(--c-primary-dark);
+  transition: transform .06s ease, filter .06s ease, opacity .2s ease;
+}
+.ui-btn:active { transform: translateY(1px); filter: brightness(.96); }
+.ui-btn.ghost {
+  background: var(--c-glass); color: var(--c-white);
+  border: 1px solid var(--c-border); box-shadow: none;
+}
+
+/* ===== Модалка (капсульная карточка) ===== */
+.modal {
+  position: fixed; inset: 0; padding: 16px;
+  background: rgba(0,0,0,0.45);
+  z-index: var(--z-modal);
+  pointer-events: none;
+  display: none;             /* важный фикс: модалка скрыта */
+  place-items: center;
+}
+.modal.open { display: grid; pointer-events: auto; }
+
+.modal-card{
+  width: min(92vw, 420px); max-height: 72vh;
+  display: grid; grid-template-rows: auto 1fr;
+  border-radius: 24px;
+  background: var(--panel-bg);
+  border: 2px solid var(--accent);
+  box-shadow: var(--panel-shadow);
+  overflow: hidden;
+}
+.modal-head{
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--panel-border-strong);
+  text-align: center;
+  background: linear-gradient(180deg, rgba(255,255,255,.04), transparent);
+}
+.modal-title{ font-size: 22px; font-weight: 800; letter-spacing: .2px; color: #fff; }
+.modal-body{ padding: 14px 16px 18px; overflow: auto; }
+
+/* Меню списком */
+.menu-list{ display: grid; gap: 12px; }
+.menu-row{
+  display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px;
+  padding: 14px;
+  border-radius: 18px;
+  background: var(--panel-row);
+  border: 1px solid var(--panel-border-strong);
+}
+.menu-title{ color: #fff; font-size: 20px; font-weight: 800; }
+.menu-sub{ color: rgba(255,255,255,.78); font-weight: 700; font-size: 13px; }
+
+/* круглая кнопка */
+.pill-btn{
+  appearance: none; border: 0;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #0b2a10; font-weight: 900; font-size: 15px;
+  box-shadow: 0 2px 0 var(--accent-dark);
+  cursor: pointer; transition: transform .06s ease, filter .06s ease;
+}
+.pill-btn:active{ transform: translateY(1px); filter: brightness(.95); }
+
+/* бейдж количества в инвентаре */
+.qty-pill{
+  padding: 6px 10px; border-radius: 999px;
+  background: rgba(255,255,255,.12);
+  color: #fff; font-weight: 800; font-size: 14px;
+  border: 1px solid var(--panel-border-strong);
+}
+
+/* ===== Тосты ===== */
+.toast-host {
+  position: fixed; left: 50%; bottom: calc(18% + env(safe-area-inset-bottom,0));
+  transform: translateX(-50%);
+  display: grid; gap: 8px; z-index: var(--z-toast); pointer-events: none;
+}
+.toast {
+  min-width: 200px; max-width: 86vw;
+  padding: 10px 14px; border-radius: 12px; font-weight: 800;
+  color: var(--c-white); background: var(--c-bg); border: 1px solid var(--c-border);
+  box-shadow: var(--shadow-1); opacity: 0; transform: translateY(10px);
+  transition: opacity .2s ease, transform .2s ease;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+
+/* ===== Адаптив ===== */
+@media (max-width: 380px) { :root { --tile-size: 64px; --tile-gap: 8px; } }
+@media (max-width: 340px) { :root { --tile-size: 56px; --tile-gap: 6px; } }
+@media (max-width: 360px){
+  .modal-card{ width: 95vw; }
+  .menu-title{ font-size: 18px; }
+  .pill-btn{ padding: 9px 14px; font-size: 14px; }
+}
+
+/* для скрытой кнопки закрытия (доступность) */
+.sr-only { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
